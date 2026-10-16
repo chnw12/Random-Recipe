@@ -1,0 +1,6 @@
+{
+  "functions": {
+    "api/create.js": { "maxDuration": 30 },
+    "api/confirm.js": { "maxDuration": 15 }
+  }
+}
