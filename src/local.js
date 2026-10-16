@@ -45,22 +45,11 @@ export function browserId() {
   return id
 }
 
-export const getExcluded = () => read('dr.exclude', [])
-export const setExcluded = (ids) => write('dr.exclude', ids)
 
-export const getFavorites = () => read('dr.favorites', [])
-export const isFavorite = (menuName) => getFavorites().some((f) => f.menu.menuName === menuName)
-export function toggleFavorite(menu) {
-  const cur = getFavorites()
-  const has = cur.find((f) => f.menu.menuName === menu.menuName)
-  const next = has ? cur.filter((f) => f !== has) : [{ id: uuid(), savedAt: Date.now(), menu }, ...cur].slice(0, 100)
-  return { saved: !has, ok: write('dr.favorites', next) }
-}
 
 export const getSpend = () => read('dr.spend', [])
 export const addSpend = (rec) => write('dr.spend', [...getSpend(), rec].slice(-1000))
 
-export const getCategory = () => read('dr.category', 'diet')
 
 /** 이번 주(월요일 시작)/이번 달/지난달 쓴 금액 합계 (이 기기의 시간 기준) */
 export function spendStats(records, now = new Date()) {

@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { checkRecipe, hasBannedWording, mentionedOutsiders, parseJsonLoose } from '../lib/harness.js'
-import { INGREDIENTS, SLOTS, bySlot, drawThree, getIngredient, resolveTriple, slotsWithoutRemaining } from '../lib/ingredients.js'
+import { INGREDIENTS, SLOTS, bySlot, drawThree, getIngredient, resolveTriple } from '../lib/ingredients.js'
 import { josa, mockRecipe } from '../lib/mock.js'
 import { GOOD_RECIPE, TRIPLE } from './util.js'
 
@@ -114,19 +114,59 @@ test('mock 생성기: 다시 창조(avoidMenuName)는 다른 이름을 낸다, �
   assert.doesNotMatch(JSON.stringify(mockRecipe(t)), /은\(는\)|을\(를\)/)
 })
 
-test('뽑기/제외: 칸마다 하나, 제외 재료는 안 나오고, 한 칸이 비면 알려준다', () => {
-  const ex = bySlot('protein').slice(0, 19).map((i) => i.id)
-  for (let n = 0; n < 100; n++) {
-    const { picked: pk, emptySlots } = drawThree(ex)
-    assert.deepEqual(emptySlots, [])
-    assert.deepEqual(pk.map((x) => x.slot), ['protein', 'carb', 'sauce'])
-    assert.equal(pk[0].id, bySlot('protein')[19].id)
+test('뽑기: 칸마다 하나, 칸 순서(단백질·채소·양념), 난수 주입으로 결정적', () => {
+  for (let n = 0; n < 100; n++) assert.deepEqual(drawThree().picked.map((x) => x.slot), ['protein', 'carb', 'sauce'])
+  assert.deepEqual(drawThree(() => 0).picked.map((x) => x.id), ['p-chicken-breast', 'c-broccoli', 's-perilla-oil'])
+  assert.deepEqual(drawThree(() => 0.999).picked.map((x) => x.id), ['p-mussel', 'c-lettuce', 's-mustard'])
+  // 모든 재료가 뽑힐 수 있다
+  const seen = new Set()
+  for (let i = 0; i < 20; i++) for (const p of drawThree(() => i / 20).picked) seen.add(p.id)
+  assert.equal(seen.size, 60)
+})
+
+test('조리 순서 길이: 3~6단계, 각 70자 이하', () => {
+  const picked = ids(...TRIPLE)
+  const ok = (steps) => checkRecipe({ ...GOOD_RECIPE, steps }, picked).ok
+  const line = '두부와 양배추를 볶고 카레가루를 넣는다.'
+  assert.equal(ok(Array(2).fill(line)), false)
+  assert.equal(ok(Array(3).fill(line)), true)
+  assert.equal(ok(Array(6).fill(line)), true)
+  assert.equal(ok(Array(7).fill(line)), false)
+  const head = '두부 양배추 카레가루를 '
+  const withLen = (n) => head + '가'.repeat(n - head.length)
+  assert.equal(withLen(70).length, 70)
+  assert.equal(ok([withLen(70), line, line]), true) // 정확히 70자는 허용
+  assert.equal(ok([withLen(71), line, line]), false) // 71자는 거절
+})
+
+test('날생선·해산물 익히기: 가열 단계가 있어야 하고 날것 조리법은 거절', () => {
+  const salmon = ids('p-salmon', 'c-cabbage', 's-lemon')
+  const mk = (steps, menuName = '레몬 연어 양배추 요리') => ({ menuName, minutes: 15, usedIngredientIds: salmon.map((x) => x.id), steps })
+  // 가열 단계 있음 → 통과
+  assert.equal(checkRecipe(mk(['연어를 먹기 좋게 썬다.', '양배추를 손질한다.', '팬에 연어를 속까지 익도록 굽는다.', '레몬을 짜서 올린다.']), salmon).ok, true)
+  // 가열 단계 없음 → 실패
+  const noHeat = checkRecipe(mk(['연어를 먹기 좋게 썬다.', '양배추를 채 썬다.', '접시에 담고 레몬을 짜서 올린다.']), salmon)
+  assert.equal(noHeat.ok, false)
+  assert.match(noHeat.reason, /익히는 단계/)
+  // 날것 조리법 → 실패 (가열 단계가 같이 있어도)
+  for (const raw of ['연어를 날로 얇게 썰어 올린다.', '연어를 생으로 레몬에 재운다.', '연어 세비체처럼 버무린다.', '연어 타르타르를 만든다.']) {
+    assert.equal(checkRecipe(mk(['양배추를 볶는다.', raw, '레몬을 짜서 올린다.']), salmon).ok, false, raw)
   }
-  const all = bySlot('sauce').map((i) => i.id)
-  assert.deepEqual(drawThree(all).emptySlots, ['sauce'])
-  assert.deepEqual(slotsWithoutRemaining(all), ['sauce'])
-  assert.deepEqual(slotsWithoutRemaining(all.slice(1)), [])
-  assert.deepEqual(drawThree([], () => 0).picked.map((x) => x.id), ['p-chicken-breast', 'c-broccoli', 's-perilla-oil'])
+  // 해당 없는 재료(두부)는 가열 단계가 없어도 된다
+  assert.equal(checkRecipe(good({ steps: ['두부를 썬다.', '양배추를 썬다.', '카레가루를 뿌려 섞는다.'] }), picked).ok, true)
+})
+
+test('날생선·해산물 표시: 7개(연어, 대구살, 삼치, 오징어, 새우, 가리비 관자, 홍합살)만 cook', () => {
+  assert.deepEqual(INGREDIENTS.filter((i) => i.cook).map((i) => i.name).sort(), ['가리비 관자', '대구살', '삼치', '새우', '연어', '오징어', '홍합살'].sort())
+})
+
+test('mock 생성기: 날생선·해산물 조합은 "속까지 익히는" 문장을 넣는다', () => {
+  for (const p of bySlot('protein').filter((x) => x.cook)) for (const s of ['s-curry', 's-oven', 's-steam']) {
+    const t = [p, getIngredient('c-cabbage'), getIngredient(s)]
+    const r = mockRecipe(t)
+    assert.match(r.steps.join(' '), /속까지 완전히/, `${p.name}+${s}`)
+    assert.equal(checkRecipe(r, t).ok, true)
+  }
 })
 
 test('resolveTriple: 목록 밖/칸 중복/개수 오류를 거부하고 칸 순서로 정렬', () => {

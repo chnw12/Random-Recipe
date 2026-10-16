@@ -12,7 +12,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "node --test \"test/*.test.js\"",
-    "db:setup": "node --env-file-if-exists=.env scripts/db-setup.js"
+    "db:setup": "node --env-file-if-exists=.env scripts/db-setup.js",
+    "data:check": "node --env-file-if-exists=.env scripts/check-data.js"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
