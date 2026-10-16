@@ -3,6 +3,8 @@
 재료 3개(단백질 / 채소·탄수화물 / 양념·조리법)를 무작위로 뽑고, AI가 새 메뉴와 조리법을 만든다.
 Vite + React + MUI(JavaScript), 서버는 `/api` 폴더의 Vercel 서버리스 함수, DB는 Neon PostgreSQL(선택).
 
+**배포 주소**: https://random-recipe-drab.vercel.app (Vercel Hobby, 수업용 비상업 데모)
+
 ## 빠른 시작
 ```bash
 npm install
@@ -112,6 +114,8 @@ JSON 형식·길이(조리 순서 3~6단계, 각 70자 이하, 이름 40자 이�
 목표 집계: `select count(distinct browser_id) from confirmations;`
 
 ## 배포 (Vercel Hobby, 수업용 비상업 데모)
+현재 배포: **https://random-recipe-drab.vercel.app**
+
 저장소를 Vercel에 연결하고 Environment Variables 에 `.env.example` 의 같은 이름을 넣는다. `api/` 는 자동으로 서버리스 함수가 된다(`vercel.json` 에서 함수 최대 시간만 지정).
 발표 전날 실제 주소에서 첫 요청 시간(Neon 대기 상태 포함)을 재 볼 것.
 
@@ -128,7 +132,8 @@ JSON 형식·길이(조리 순서 3~6단계, 각 70자 이하, 이름 40자 이�
 확인 못 함:
 - **실제 OpenAI/Gemini/Anthropic 호출** — 요청 형식은 OpenAI 호환 가짜 서버(`OPENAI_BASE_URL`)로 HTTP 수준까지만 확인. 기본 모델명이 계정에서 쓸 수 있는지, **실제 AI가 70자·3~6단계·날생선 규칙을 잘 지키는지(= 422 빈도)** 는 실제 키로 확인 필요.
 - **실제 Neon DB** — 쿼리는 가짜 sql 로만 테스트. `npm run db:setup`, 배열 컬럼 저장, upsert 는 실제 DB에서 첫 실행 때 확인할 것.
-- Vercel 배포, 쇼핑몰 검색 URL 형식(접속 확인 안 함), 재료 `amount`(1인분 기준량)는 임시 값 → 팀이 확정.
+- 배포 주소의 화면(HTTP 200)과 `/api/create`·`/api/confirm`의 GET 응답(405, 명세대로)만 확인했다. **배포본에서 뽑기 → AI 레시피 → 확정 전체 흐름과 실제 OpenAI/Neon 동작은 이 문서 작성 시점에 에이전트가 직접 확인하지 못했다.**
+- 쇼핑몰 검색 URL 형식(접속 확인 안 함), 재료 `amount`(1인분 기준량)는 임시 값 → 팀이 확정.
 
 ## 데스크톱 프로토타입과 다른 점
 - 채팅 메뉴 추천은 뺐고, 즐겨찾기·재료 제외·카테고리는 "준비 중" 화면만 있다.
