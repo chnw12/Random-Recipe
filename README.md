@@ -5,6 +5,28 @@ Vite + React + MUI(JavaScript), 서버는 `/api` 폴더의 Vercel 서버리스 �
 
 **배포 주소**: https://random-recipe-drab.vercel.app (Vercel Hobby, 수업용 비상업 데모)
 
+## 폴더 구성 (백엔드 / 프론트엔드)
+```
+backend/    API 서버 (api/, lib/, db/, scripts/, test/, server.js, .env.example)
+frontend/   React 화면 (src/, index.html, vite.config.js)
+```
+**연결 방식**: 브라우저는 `/api/*` 만 부른다. 개발 중에는 `frontend/vite.config.js` 의 프록시가 `/api` 를 백엔드(`http://localhost:3001`, 바꾸려면 `frontend/.env` 의 `BACKEND_URL`)로 넘긴다. 재료 목록 `backend/lib/ingredients.js` 는 화면도 `@backend` 별칭으로 같이 쓴다(Node 전용 API 금지).
+
+| 메서드·경로 | 하는 일 |
+|---|---|
+| `GET /api/health` | 백엔드 연결 확인 `{ ok, mode, db }` (비밀 값 없음) |
+| `GET /api/ingredients` | 칸별 재료 목록 |
+| `POST /api/create` | 창조 / 다시 창조 |
+| `POST /api/confirm` | 확정 기록 |
+
+```bash
+npm run install:all     # backend, frontend 각각 설치
+npm run dev:backend     # 터미널 1: http://localhost:3001
+npm run dev:frontend    # 터미널 2: http://localhost:5173 (/api 는 백엔드로 프록시)
+npm test                # backend 테스트
+```
+Node 20 이상 필요(Vite 8). 아래 본문의 `api/`, `lib/`, `src/` 경로는 각각 `backend/`, `frontend/` 안에 있다.
+
 ## 빠른 시작
 ```bash
 npm install
@@ -112,6 +134,12 @@ JSON 형식·길이(조리 순서 3~6단계, 각 70자 이하, 이름 40자 이�
 `npm run db:setup` → `db/schema.sql` 실행 (`confirmations`, `rate_limits`, 모두 `create table if not exists`).
 요청 횟수의 `ip` 칸에는 IP 원문이 아니라 구분(create/confirm)과 IP를 해시한 값이 들어간다.
 목표 집계: `select count(distinct browser_id) from confirmations;`
+
+## 배포 (GitHub Actions → Docker → AWS ECR)
+`.github/workflows/deploy.yaml`: `main` 에 push 하면 루트 `Dockerfile` 로 이미지 하나(화면 + API)를 빌드해 ECR(`idea-support-server`)에 `:latest` 와 `:<커밋 SHA>` 로 올린다. PR 에서는 이미지를 올리지 않는다.
+- 필요한 GitHub Secrets: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
+- Lint/Test 잡은 지금 `if: ${{ false }}` 로 건너뛴다. 다시 켜는 방법은 워크플로 파일 주석 참고.
+- 컨테이너는 `node server.js` 하나가 3001 포트에서 `/api/*` 와 화면 파일을 같이 내보낸다. `.env` 는 이미지에 들어가지 않으므로(`.dockerignore`) 실행 환경에서 `LLM_PROVIDER`, `OPENAI_API_KEY`, `DATABASE_URL` 등을 환경 변수로 넘긴다.
 
 ## 배포 (Vercel Hobby, 수업용 비상업 데모)
 현재 배포: **https://random-recipe-drab.vercel.app**

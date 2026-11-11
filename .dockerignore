@@ -1,0 +1,11 @@
+# 비밀 값은 이미지에 절대 넣지 않는다
+**/.env
+**/.env.*
+!**/.env.example
+
+**/node_modules
+**/dist
+.git
+.github
+.vercel
+*.log

@@ -1,0 +1,79 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+env:
+  AWS_REGION: ap-southeast-2
+  ECR_REGISTRY: 950177940921.dkr.ecr.ap-southeast-2.amazonaws.com
+  ECR_REPOSITORY: idea-support-server7
+
+jobs:
+  # ── Lint / Test ────────────────────────────────────────────────
+  # 지금은 예외 처리(건너뜀). 다시 켜려면:
+  #   1) 아래 `if: ${{ false }}` 줄을 지우고
+  #   2) build_and_push 의 `needs: test` 주석을 푼다.
+  test:
+    name: Lint and Test
+    if: ${{ false }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          npm ci --prefix backend
+          npm ci --prefix frontend
+
+      # 테스트는 실제 AI·DB를 쓰지 않는다 (가짜 fetch / 가짜 sql). 비밀 값 필요 없음.
+      - name: Run tests and build
+        run: |
+          npm test --prefix backend
+          npm run build --prefix frontend
+
+  # ── Docker 이미지 빌드 → ECR 푸시 (main 에 push 할 때만) ─────────
+  build_and_push:
+    name: Build and Push Docker Image
+    # needs: test
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Log in to Amazon ECR
+        run: aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
+
+      # 화면(frontend) + API(backend)를 이미지 하나로 빌드한다 (루트 Dockerfile).
+      # .env 같은 비밀 값은 이미지에 들어가지 않는다 (.dockerignore). 실행 환경에서 환경 변수로 넘긴다.
+      - name: Build and Push Image
+        env:
+          CONTAINER_IMAGE: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}
+        run: |
+          docker build -t $CONTAINER_IMAGE:latest -t $CONTAINER_IMAGE:${{ github.sha }} .
+          docker push $CONTAINER_IMAGE:latest
+          docker push $CONTAINER_IMAGE:${{ github.sha }}
