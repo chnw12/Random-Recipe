@@ -3,10 +3,10 @@ name: Deploy
 on:
   push:
     branches:
-      - main
+      - master
   pull_request:
     branches:
-      - main
+      - master
 
 env:
   AWS_REGION: ap-southeast-2
@@ -47,7 +47,7 @@ jobs:
           npm test --prefix backend
           npm run build --prefix frontend
 
-  # ── Docker 이미지 빌드 → ECR 푸시 (main 에 push 할 때만) ─────────
+  # ── Docker 이미지 빌드 → ECR 푸시 (master 에 push 할 때만) ─────────
   build_and_push:
     name: Build and Push Docker Image
     # needs: test

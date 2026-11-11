@@ -136,7 +136,7 @@ JSON 형식·길이(조리 순서 3~6단계, 각 70자 이하, 이름 40자 이�
 목표 집계: `select count(distinct browser_id) from confirmations;`
 
 ## 배포 (GitHub Actions → Docker → AWS ECR)
-`.github/workflows/deploy.yaml`: `main` 에 push 하면 루트 `Dockerfile` 로 이미지 하나(화면 + API)를 빌드해 ECR(`idea-support-server`)에 `:latest` 와 `:<커밋 SHA>` 로 올린다. PR 에서는 이미지를 올리지 않는다.
+`.github/workflows/deploy.yaml`: `master` 에 push 하면 루트 `Dockerfile` 로 이미지 하나(화면 + API)를 빌드해 ECR(`idea-support-server7`)에 `:latest` 와 `:<커밋 SHA>` 로 올린다. PR 에서는 이미지를 올리지 않는다.
 - 필요한 GitHub Secrets: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
 - Lint/Test 잡은 지금 `if: ${{ false }}` 로 건너뛴다. 다시 켜는 방법은 워크플로 파일 주석 참고.
 - 컨테이너는 `node server.js` 하나가 3001 포트에서 `/api/*` 와 화면 파일을 같이 내보낸다. `.env` 는 이미지에 들어가지 않으므로(`.dockerignore`) 실행 환경에서 `LLM_PROVIDER`, `OPENAI_API_KEY`, `DATABASE_URL` 등을 환경 변수로 넘긴다.
