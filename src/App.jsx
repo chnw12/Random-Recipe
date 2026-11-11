@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Alert, Button, Container, Snackbar } from '@mui/material'
-import { SLOTS, bySlot, drawThree, getIngredient } from '@backend/ingredients.js'
+import { SLOTS, bySlot, drawThree, getIngredient } from '../lib/ingredients.js'
 import { createMenu } from './api.js'
 import { AppDrawer, ComingSoonScreen, ConfirmScreen, DrawScreen, MainScreen, PriceSheet, ResultScreen, StatsScreen } from './screens.jsx'
 

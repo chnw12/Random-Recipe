@@ -3,8 +3,6 @@
 이 저장소에서 코드를 고치는 사람/에이전트를 위한 규칙. 먼저 `README.md`(전체 기능 목록 포함)를 읽는다.
 
 ## 명령
-- 폴더: `backend/`(api, lib, db, scripts, test, server.js) / `frontend/`(src, vite). 아래 경로의 `api/ lib/ test/` 는 `backend/` 안, `src/` 는 `frontend/` 안이다.
-- 개발은 터미널 2개: `npm run dev:backend`(3001), `npm run dev:frontend`(5173, `/api` 프록시). 테스트는 루트 `npm test`(= backend).
 - `npm run dev` 화면 + `/api` (http://localhost:5173), `npm test` 서버 테스트, `npm run build`, `npm run db:setup`
 - `npm run data:check` 공공데이터 API 확인용(보류 중인 기능의 사전 조사). DB에 쓰지 않는다.
 - 변경 후에는 `npm test` 와 `npm run build` 를 둘 다 통과시킨다.

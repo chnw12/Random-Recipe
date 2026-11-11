@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Box, Chip, CircularProgress, Divider, Drawer, IconButton, List, ListItemButton, ListItemIcon, ListItemText, Stack, TextField, Typography } from '@mui/material'
-import { SLOTS, getIngredient } from '@backend/ingredients.js'
+import { SLOTS, getIngredient } from '../lib/ingredients.js'
 import { recordConfirm } from './api.js'
 import { addSpend, browserId, getSpend, spendStats, won } from './local.js'
 import { Icon } from './icons.jsx'

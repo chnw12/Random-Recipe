@@ -44,14 +44,3 @@ export function recordConfirm({ browserId, menuName, ingredientIds }) {
     /* 무시 */
   }
 }
-
-/** 백엔드 연결 확인. 연결되면 { ok: true, mode: 'ai' | 'mock' | null, db: boolean }, 안 되면 null. */
-export async function checkBackend() {
-  try {
-    const res = await fetch('/api/health')
-    const data = await res.json().catch(() => null)
-    return res.ok && data?.ok ? data : null
-  } catch {
-    return null
-  }
-}
