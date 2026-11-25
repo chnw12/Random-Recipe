@@ -27,7 +27,9 @@ npm test                # backend 테스트
 ```
 Node 20 이상 필요(Vite 8). 아래 본문의 `api/`, `lib/`, `src/` 경로는 각각 `backend/`, `frontend/` 안에 있다.
 
-## Spring 백엔드 (`backend-spring/`, 9~12주차 과제 · 전환 중)
+## Spring 백엔드 (저장소 루트의 Gradle 프로젝트, 9~12주차 과제 · 전환 중)
+수업 워크플로가 저장소 루트에서 `./gradlew` 를 실행하므로 Spring 프로젝트(`build.gradle.kts`, `gradlew`, `src/`)는 루트에 있다. `backend/`(Node), `frontend/`(React)와 나란히 둔다.
+
 수업 배포가 Spring 기준이라 Node 백엔드(`backend/`)와 **같은 API**(`/api/ingredients`, `/api/create`, `/api/confirm`, `/api/health`)를 Kotlin + Spring Boot로 옮겼다. 요청·응답 형식, 오류 코드·문구, 하네스 규칙, 요청 횟수 제한은 Node 버전과 같다. Node 백엔드는 비교용으로 남겨 두었다.
 
 - 틀: 수업 예제 서버와 같은 Kotlin 1.9 + Spring Boot 3.2.1 + Java 17 + Gradle 8.5 + Jib + ktlint
@@ -38,14 +40,21 @@ Node 20 이상 필요(Vite 8). 아래 본문의 `api/`, `lib/`, `src/` 경로는
 - 재료 목록: 화면은 `backend/lib/ingredients.js`, 서버는 `Ingredients.kt`. `IngredientsParityTest` 가 둘이 같은지 비교한다.
 
 ```bash
-cd backend-spring
-./gradlew ktlintCheck test   # 테스트 47개 (H2 + 가짜 AI 전송, 네트워크·외부 DB 없음)
+./gradlew ktlintCheck test   # (루트에서) 테스트 47개 (H2 + 가짜 AI 전송, 네트워크·외부 DB 없음)
 ./gradlew bootRun            # http://localhost:8080 (local 프로필)
-npm run dev:frontend         # (루트에서) http://localhost:5173, /api 는 8080 으로 프록시
+npm run dev:frontend         # http://localhost:5173, /api 는 8080 으로 프록시
 ```
 Windows 에서 `JAVA_HOME` 이 JDK 폴더(예: `C:\Program Files\Java\jdk-18.0.2.1`)를 가리켜야 한다 (끝에 `\bin` 까지 넣으면 Gradle 이 실패한다).
 
-아직 안 한 것: Spring 이미지 빌드(Dockerfile/Jib)와 `/team7/` 하위 경로 대응, `dev-registry.yaml`, 실제 AI 키·수업 MySQL 로 확인.
+### CI/CD (수업 예시 워크플로를 그대로 사용)
+| 파일 | 언제 | 하는 일 |
+|---|---|---|
+| `.github/workflows/dev-registry.yaml` | `dev` push·PR, Actions 버튼 | `ktlintCheck test` → (push 만) Jib 으로 `docker.minq.live/team7/idea-support-server:dev-<SHA>`·`latest` 업로드 → `https://daelim.minq.live/_cd/team7` 로 7조 앱 교체 → `/team7/common/health` 가 `status: ok`, `database: up` 인지 확인 |
+| `.github/workflows/deploy.yaml` | `main` push·PR | `ktlintCheck test` → (push 만) Jib(prod 프로필)으로 ECR `idea-support-server` 에 `latest`·`<SHA>` 업로드 |
+
+수업 예시와 다른 곳은 `dev-registry.yaml` 의 기본 namespace(`team` → `team7`) 한 줄뿐이다. 값은 GitHub Environments `dev` 의 Variables(`DEV_REGISTRY_HOST`, `DEV_REGISTRY_NAMESPACE`, `DEV_DEPLOY_URL`)와 Secrets(`DEV_REGISTRY_USER`, `DEV_REGISTRY_PASSWORD`, `DEV_DEPLOY_TOKEN`), 저장소 Secrets(`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`)에서 읽는다.
+
+아직 안 한 것: 이미지에 React 화면 포함(`/team7/` 에서 화면 보이기), 실제 AI 키·수업 MySQL 로 확인.
 
 ## 빠른 시작
 ```bash

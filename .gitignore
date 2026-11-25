@@ -6,7 +6,7 @@ dist
 .vercel
 *.log
 
-# Spring (backend-spring)
+# Spring (루트 Gradle 프로젝트)
 build/
 .gradle/
 .idea/

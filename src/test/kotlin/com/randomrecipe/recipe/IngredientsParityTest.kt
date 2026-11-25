@@ -7,7 +7,7 @@ import java.io.File
 // 화면은 backend/lib/ingredients.js 로 재료를 뽑고, 서버는 Ingredients.kt 로 검사한다.
 // 한쪽만 고치면 "목록 밖 재료" 오류가 나므로 두 목록이 같은지 줄마다 비교한다.
 class IngredientsParityTest {
-	private val js = File("../backend/lib/ingredients.js")
+	private val js = File("backend/lib/ingredients.js")
 
 	private val line = Regex("""^\s*([PCS])\('([^']+)',\s*'([^']+)',\s*'([^']+)'(?:,\s*\{(.*)\})?\)""")
 	private val list = Regex("""(aliases|guard):\s*\[([^\]]*)\]""")

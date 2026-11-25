@@ -1,21 +1,17 @@
 root = true
 
-[*]
+# Spring(Kotlin) 코드 스타일: 수업 예제 서버와 같은 ktlint 규칙. 프론트 JS 파일에는 적용하지 않는다.
+[*.{kt,kts}]
 charset = utf-8
 end_of_line = lf
 indent_style = tab
 indent_size = 4
+tab_width = 4
 insert_final_newline = true
 max_line_length = 140
-tab_width = 4
+ktlint_standard_filename = disabled
 ktlint_standard_no-wildcard-imports = disabled
 ktlint_standard_import-ordering = disabled
 ktlint_standard_comment-spacing = disabled
 ktlint_standard_max-line-length = disabled
-
-[*.{kt,kts}]
-ktlint_standard_filename = disabled
 ij_kotlin_imports_layout = *
-ktlint_standard_import-ordering = disabled
-ktlint_no-wildcard-imports = disabled
-ktlint_standard_no-wildcard-imports = disabled
