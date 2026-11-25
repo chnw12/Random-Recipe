@@ -3,6 +3,8 @@
 이 저장소에서 코드를 고치는 사람/에이전트를 위한 규칙. 먼저 `README.md`(전체 기능 목록 포함)를 읽는다.
 
 ## 명령
+- **Spring 전환 중**: `backend-spring/`(Kotlin + Spring Boot)이 `backend/`(Node)와 같은 API를 제공한다. 프론트 개발 서버의 `/api` 기본 대상은 Spring(8080). 서버 규칙(하네스·오류 형식·요청 횟수)을 바꾸면 **두 백엔드와 두 테스트를 같이** 고친다. 재료를 바꾸면 `backend/lib/ingredients.js` 와 `Ingredients.kt` 를 같이 고친다(`IngredientsParityTest`).
+- Spring 확인: `cd backend-spring && ./gradlew ktlintCheck test` (수업 CI와 같은 검사).
 - 폴더: `backend/`(api, lib, db, scripts, test, server.js) / `frontend/`(src, vite). 아래 경로의 `api/ lib/ test/` 는 `backend/` 안, `src/` 는 `frontend/` 안이다.
 - 개발은 터미널 2개: `npm run dev:backend`(3001), `npm run dev:frontend`(5173, `/api` 프록시). 테스트는 루트 `npm test`(= backend).
 - `npm run dev` 화면 + `/api` (http://localhost:5173), `npm test` 서버 테스트, `npm run build`, `npm run db:setup`

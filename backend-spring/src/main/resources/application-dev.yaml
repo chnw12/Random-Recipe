@@ -1,0 +1,10 @@
+# 학교 개발 서버(Lightsail). DB 접속값은 수업 예제 서버와 같은 환경 변수 이름으로 받는다.
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${DB_HOST}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}

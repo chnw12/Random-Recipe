@@ -1,0 +1,16 @@
+# 공통 설정. 비밀 값은 여기 쓰지 않는다: 실행 환경의 환경 변수로 넘긴다.
+spring:
+  application:
+    name: random-recipe-server
+  profiles:
+    default: local
+  liquibase:
+    change-log: classpath:db/changelog-master.yml
+server:
+  port: ${PORT:8080}
+  shutdown: graceful
+app:
+  # 요청 처리 제한 (Node 버전과 같은 값)
+  create:
+    deadline-ms: 14000
+    retry-min-remaining-ms: 1500

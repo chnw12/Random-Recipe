@@ -5,3 +5,10 @@ dist
 !.env.example
 .vercel
 *.log
+
+# Spring (backend-spring)
+build/
+.gradle/
+.idea/
+.kotlin/
+*.iml

@@ -1,0 +1,46 @@
+# 확정 기록 테이블. 개인 정보 없음 (시각, 익명 브라우저 ID, 메뉴 이름, 재료 ID 3개)
+databaseChangeLog:
+  - changeSet:
+      id: 1-confirmations
+      author: random-recipe
+      changes:
+        - createTable:
+            tableName: confirmations
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP(3)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: browser_id
+                  type: CHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: menu_name
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: ingredient_ids
+                  type: VARCHAR(200)
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: confirmations
+            indexName: confirmations_browser_menu_time_idx
+            columns:
+              - column:
+                  name: browser_id
+              - column:
+                  name: menu_name
+              - column:
+                  name: created_at

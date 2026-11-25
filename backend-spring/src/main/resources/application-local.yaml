@@ -1,0 +1,11 @@
+# 로컬 실행: 메모리 DB(H2) + 예시 모드(mock). 키 없이 바로 뜬다.
+spring:
+  config:
+    activate:
+      on-profile: local
+  datasource:
+    url: jdbc:h2:mem:random_recipe;MODE=MySQL;DB_CLOSE_DELAY=-1
+    username: sa
+    password: ""
+# 환경 변수 LLM_PROVIDER 가 있으면 그 값이 우선한다 (Spring 은 OS 환경 변수가 yaml 보다 앞선다)
+LLM_PROVIDER: mock
