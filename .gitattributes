@@ -1,0 +1,2 @@
+# 리눅스 CI 에서 바로 실행되도록 gradlew 는 항상 LF 로 둔다
+backend-spring/gradlew text eol=lf
