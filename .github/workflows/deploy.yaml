@@ -3,10 +3,10 @@ name: Deploy
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
     branches:
-      - master
+      - main
 
 env:
   AWS_REGION: ap-southeast-2
@@ -14,49 +14,63 @@ env:
   ECR_REPOSITORY: idea-support-server7
 
 jobs:
-  # ── Lint / Test ────────────────────────────────────────────────
-  # 지금은 예외 처리(건너뜀). 다시 켜려면:
-  #   1) 아래 `if: ${{ false }}` 줄을 지우고
-  #   2) build_and_push 의 `needs: test` 주석을 푼다.
   test:
     name: Lint and Test
-    if: ${{ false }}
     runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: idea_support_test7
+          MYSQL_USER: ci_user
+          MYSQL_PASSWORD: ci_password
+          MYSQL_ROOT_PASSWORD: ci_root_password
+        ports:
+          - 3306:3306
+
+    env:
+      IDEA_TEST_JDBC_URL: jdbc:mysql://127.0.0.1:3306/idea_support_test7?connectionTimeZone=UTC&forceConnectionTimeZoneToSession=true
+      IDEA_TEST_DB_USER: ci_user
+      IDEA_TEST_DB_PASSWORD: ci_password
 
     steps:
       - name: Check out the code
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - name: Set up JDK
+        uses: actions/setup-java@v4
         with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: |
-            backend/package-lock.json
-            frontend/package-lock.json
+          java-version: 17
+          distribution: temurin
 
-      - name: Install dependencies
-        run: |
-          npm ci --prefix backend
-          npm ci --prefix frontend
+      - name: Grant execute permission for Gradlew
+        run: chmod +x ./gradlew
 
-      # 테스트는 실제 AI·DB를 쓰지 않는다 (가짜 fetch / 가짜 sql). 비밀 값 필요 없음.
-      - name: Run tests and build
-        run: |
-          npm test --prefix backend
-          npm run build --prefix frontend
+      - name: Wait for MySQL
+        run: until mysqladmin ping -h 127.0.0.1 --silent; do sleep 2; done
 
-  # ── Docker 이미지 빌드 → ECR 푸시 (master 에 push 할 때만) ─────────
+      - name: Check code style and run tests
+        run: ./gradlew ktlintCheck test
+
   build_and_push:
     name: Build and Push Docker Image
-    # needs: test
+    needs: test
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
 
     steps:
       - name: Check out the code
         uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: temurin
+
+      - name: Grant execute permission for Gradlew
+        run: chmod +x ./gradlew
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -65,15 +79,10 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Log in to Amazon ECR
-        run: aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
-
-      # 화면(frontend) + API(backend)를 이미지 하나로 빌드한다 (루트 Dockerfile).
-      # .env 같은 비밀 값은 이미지에 들어가지 않는다 (.dockerignore). 실행 환경에서 환경 변수로 넘긴다.
-      - name: Build and Push Image
+      - name: Build and Push Image with Jib
         env:
-          CONTAINER_IMAGE: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}
+          REGISTRY_USER: AWS
+          CONTAINER_IMAGE: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest
         run: |
-          docker build -t $CONTAINER_IMAGE:latest -t $CONTAINER_IMAGE:${{ github.sha }} .
-          docker push $CONTAINER_IMAGE:latest
-          docker push $CONTAINER_IMAGE:${{ github.sha }}
+          export REGISTRY_PASSWORD=$(aws ecr get-login-password --region $AWS_REGION)
+          ./gradlew jib -PprojectDataImageTargetEnv=prod
